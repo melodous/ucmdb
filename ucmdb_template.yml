@@ -1,0 +1,154 @@
+apiVersion: v1
+kind: Template
+metadata:
+  creationTimestamp: null
+  name: jmn-ucmdb
+objects:
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftWebConsole
+    creationTimestamp: null
+    labels:
+      app: ucmdb
+    name: ucmdb
+  spec:
+    nodeSelector: null
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ucmdb:latest
+    postCommit: {}
+    resources: {}
+    runPolicy: Serial
+    source:
+      git:
+        ref: master
+        uri: https://github.com/jmnohales/ucmdb.git
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: php:5.6
+          namespace: openshift
+      type: Source
+    triggers:
+    - generic:
+        secret: 8936aaf511d1495c
+      type: Generic
+    - github:
+        secret: c1ef861b27dca003
+      type: GitHub
+    - imageChange: {}
+      type: ImageChange
+    - type: ConfigChange
+  status:
+    lastVersion: 0
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftWebConsole
+    creationTimestamp: null
+    generation: 1
+    labels:
+      app: ucmdb
+    name: ucmdb
+  spec:
+    replicas: 2
+    selector:
+      deploymentconfig: ucmdb
+    strategy:
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: ucmdb
+          deploymentconfig: ucmdb
+      spec:
+        containers:
+        - image: docker-registry.default.svc:5000/ucmdb-jmn/ucmdb@sha256:4c51346491b97889a942b3cb100c79b9f00192c0d054645069ed8de516a9c6d7
+          imagePullPolicy: Always
+          name: ucmdb
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 200m
+              memory: 100Mi
+            requests:
+              cpu: 200m
+              memory: 100Mi
+          terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - mountPath: /tmp
+            name: volume-pbn3q
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: volume-pbn3q
+          persistentVolumeClaim:
+            claimName: tmpfiles
+    test: false
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - ucmdb
+        from:
+          kind: ImageStreamTag
+          name: ucmdb:latest
+          namespace: ucmdb-jmn
+      type: ImageChange
+    - type: ConfigChange
+  status: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: null
+    labels:
+      gluster.kubernetes.io/provisioned-for-pvc: tmpfiles
+    name: glusterfs-dynamic-tmpfiles
+  spec:
+    ports:
+    - port: 1
+      protocol: TCP
+      targetPort: 1
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftWebConsole
+    creationTimestamp: null
+    labels:
+      app: ucmdb
+    name: ucmdb
+  spec:
+    ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      deploymentconfig: ucmdb
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
