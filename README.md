@@ -23,4 +23,4 @@
     $ oc new-project ucmdb</pre>
 
 3.  Import ucmdb tempate:<br />
-<pre> $ oc create -f https://raw.githubusercontent.com/jmnohales/OCP_PHP_Demo/ucmdb/ucmdb_template.yml</pre>
+<pre> $ oc create -f https://raw.githubusercontent.com/jmnohales/ucmdb/master/ucmdb_template.yml</pre>
